@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+  <h1>안녕하세요</h1>
+  <h2>ejs로 만든 페이지 입니다.</h2>
+  <input type="text" id="inputText"/>
+  <input type="text" id="inputText2"/>
+  <button id="firstButton">버튼</button>
+  
+  <script
+  src="https://code.jquery.com/jquery-3.5.1.js"
+  integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+  crossorigin="anonymous"></script>
+  <script>
+    $("#firstButton").click(function(){
+
+      var input = $("#inputText").val();
+      var input2 = $("#inputText2").val();
+          
+      $.ajax({
+          url: "/userData",
+          type: "POST",
+          data: {
+            userData1 : input,
+            userData2 : input2
+          },
+          success: function (data) {
+          },
+      });
+    });
+
+  </script>
+</html>
