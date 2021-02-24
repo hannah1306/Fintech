@@ -3,6 +3,7 @@ const path = require('path');
 const app = express();
 const request = require('request');
 var jwt = require('jsonwebtoken');
+var auth = require('./lib/auth');
 
 //json 타입 데이터 전송 허용
 app.use(express.json());  
@@ -72,6 +73,10 @@ app.get('/ejs', function(req, res){
 
 app.get('/designTest', function(req, res){
   res.render('designSample');
+})
+
+app.get('/authTest', auth, function(req, res){
+  res.send('정상적인 로그인');
 })
 
 app.post('/userData', function(req, res){
