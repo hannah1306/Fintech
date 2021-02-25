@@ -4,6 +4,8 @@ const app = express();
 const request = require('request');
 var jwt = require('jsonwebtoken');
 var auth = require('./lib/auth');
+const companyId = 'M202111572U';
+const moment = require('moment');
 
 //json 타입 데이터 전송 허용
 app.use(express.json());  
@@ -36,6 +38,22 @@ app.get('/signup', function (req, res) {
 
 app.get('/login', function (req, res) {
   res.render('login');
+})
+
+app.get('/main', function(req, res){
+  res.render('main');
+})
+
+app.get('/balance', function(req, res){
+  res.render('balance');
+})
+
+app.get('/qrcode', function(req, res){
+  res.render('qrcode');
+})
+
+app.get('/qrreader', function(req, res){
+  res.render('qrreader');
 })
 
 app.get('/authResult', function(req, res){
@@ -148,6 +166,125 @@ app.post('/login', function(req, res){
           }
       }
   })
+})
+
+
+app.post('/list', auth, function(req, res){
+  var user = req.decoded;
+  console.log(user);
+  var sql = "SELECT * FROM user WHERE id = ?";
+  connection.query(sql,[user.userId], function(err, result){
+      if(err) throw err;
+      else {
+          var dbUserData = result[0];
+          console.log(dbUserData);
+          var option = {
+              method : "GET",
+              url : "https://testapi.openbanking.or.kr/v2.0/user/me",
+              headers : {
+                  Authorization : "Bearer " + dbUserData.accesstoken
+              },
+              qs : {
+                  user_seq_no : dbUserData.userseqno
+              }
+          }
+          request(option, function(err, response, body){
+              if(err){
+                  console.error(err);
+                  throw err;
+              }
+              else {
+                  var listRequestResult = JSON.parse(body);
+                  res.json(listRequestResult)
+              }
+          })        
+      }
+  })
+})
+
+app.post('/balance', auth, function(req, res){
+  //사용자 정보를 바탕으로 잔액조회 api request 요청
+  var finUseNum = req.body.fin_use_num;
+  var countnum = Math.floor(Math.random() * 1000000000) + 1;
+  var transId = companyId + countnum;
+
+  var user = req.decoded;
+  var sql = "SELECT * FROM user WHERE id = ?";
+  connection.query(sql,[user.userId], function(err, result){
+      if(err) throw err;
+      else {
+          var dbUserData = result[0];
+          console.log(dbUserData);
+          var option = {
+              method : "GET",
+              url : "https://testapi.openbanking.or.kr/v2.0/account/balance/fin_num",
+              headers : {
+                  Authorization : "Bearer " + dbUserData.accesstoken
+              },
+              qs : {
+                bank_tran_id: transId,
+                fintech_use_num : finUseNum,
+                tran_dtime: moment(new Date()).format('YYYYMMDDhhmmss')
+              }
+          }
+          request(option, function(err, response, body){
+              if(err){
+                  console.error(err);
+                  throw err;
+              }
+              else {
+                  var listRequestResult = JSON.parse(body);
+                  console.log(listRequestResult);
+                  res.json(listRequestResult)
+              }
+          })        
+      }
+  })  
+})
+
+
+app.post('/transactionList', auth, function(req, res){
+  var finUseNum = req.body.fin_use_num;
+  var countnum = Math.floor(Math.random() * 1000000000) + 1;
+  var transId = companyId + countnum;
+
+  var user = req.decoded;
+  var sql = "SELECT * FROM user WHERE id = ?";
+  connection.query(sql,[user.userId], function(err, result){
+      if(err) throw err;
+      else {
+          var dbUserData = result[0];
+          console.log(dbUserData);
+          var option = {
+              method : "GET",
+              url : "https://testapi.openbanking.or.kr/v2.0/account/transaction_list/fin_num",
+              headers : {
+                  Authorization : "Bearer " + dbUserData.accesstoken
+              },
+              qs : {
+                bank_tran_id: transId,
+                fintech_use_num : finUseNum,
+                inquiry_type: 'A',
+                inquiry_base: 'D',
+                from_date: moment(new Date()).format('YYYYMMDD'),
+                to_date: moment(new Date()).format('YYYYMMDD'),
+                sort_order: 'D',
+                tran_dtime: moment(new Date()).format('YYYYMMDDhhmmss'),
+            }
+          }
+          request(option, function(err, response, body){
+              if(err){
+                  console.error(err);
+                  throw err;
+              }
+              else {
+                  var listRequestResult = JSON.parse(body);
+                  console.log(listRequestResult);
+                  res.json(listRequestResult)
+              }
+          })        
+      }
+  })  
 })
 
 app.get('/user', function (req, res) {
